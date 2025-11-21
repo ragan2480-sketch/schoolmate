@@ -1,2 +1,2 @@
 # schoolmate
-ragan anteng
+web yang berisi pengingat jadwal dan tugas supaya belajar lebih maksimal
