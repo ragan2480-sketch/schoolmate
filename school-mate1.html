@@ -1,0 +1,271 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>SchoolMate</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eaf0ff;
+            margin: 0;
+            padding: 20px;
+            transition: 0.3s;
+        }
+
+        .dark {
+            background: #1d2333;
+            color: white;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2b3a67;
+            font-size: 34px;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+
+        .dark h1 {
+            color: #dce4ff;
+        }
+
+        .menu {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .menu button {
+            padding: 12px 20px;
+            margin: 6px;
+            font-size: 16px;
+            border-radius: 10px;
+            border: none;
+            background: #3c56d9;
+            color: white;
+            cursor: pointer;
+            transition: 0.25s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .menu button:hover {
+            background: #253bbd;
+            transform: scale(1.05);
+        }
+
+        .jadwal-box {
+            background: white;
+            padding: 18px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+            animation: fadeIn 0.5s ease;
+            transition: 0.3s;
+        }
+
+        .dark .jadwal-box {
+            background: #2e374d;
+            color: white;
+        }
+
+        @keyframes fadeIn {
+            from {opacity: 0; transform: translateY(10px);}
+            to   {opacity: 1; transform: translateY(0);}
+        }
+
+        .jadwal-box h2 {
+            margin: 0;
+            color: #1f2c53;
+            font-size: 22px;
+        }
+
+        .dark .jadwal-box h2 {
+            color: #dbe3ff;
+        }
+
+        ul { padding-left: 20px; }
+
+        li { margin: 4px 0; }
+
+        .motivasi {
+            background: #d6e1ff;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 18px;
+            color: #1d2e57;
+            font-weight: bold;
+            animation: fadeIn 1s ease;
+        }
+
+        .dark .motivasi {
+            background: #34415a;
+            color: #eaf0ff;
+        }
+
+        .hapus-btn {
+            background: red;
+            padding: 3px 6px;
+            color: white;
+            font-size: 12px;
+            border-radius: 5px;
+            border: none;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .hapus-btn:hover {
+            background: darkred;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <h1>📚 SchoolMate</h1>
+
+    <div class="motivasi" id="motivasiBox"></div>
+
+    <div class="menu">
+        <button onclick="showFormTambah()">➕ Tambah Pelajaran</button>
+        <button onclick="showFormTugas()">📝 Tambah Tugas</button>
+        <button onclick="editMode()">✏️ Mode Edit</button>
+        <button onclick="toggleDark()">🌙 Mode Gelap</button>
+        <button onclick="ingatTugas()">🔔 Ingatkan Tugas</button>
+    </div>
+
+    <div id="jadwalContainer"></div>
+
+    <script>
+        const motivasiList = [
+            "Tetap semangat! Masa depanmu dimulai hari ini 💪",
+            "Jangan menyerah, kamu lebih kuat dari yang kamu kira! ✨",
+            "Fokus kecil hari ini menentukan masa depan besar 💡",
+            "Belajar itu berat, hasilnya manis 🍀",
+            "Kamu hebat! Jangan bandingkan dirimu dengan orang lain ⭐"
+        ];
+
+        document.getElementById("motivasiBox").innerHTML =
+            motivasiList[new Date().getDay() % motivasiList.length];
+
+        let defaultJadwal = {
+            "Senin": ["Informatika", "Bahasa Inggris", "Bahasa Indonesia"],
+            "Selasa": ["PJOK", "Seni Budaya", "Matematika Wajib", "Matematika Lanjut"],
+            "Rabu": ["PAI", "Sejarah", "Fisika", "BK", "Informatika"],
+            "Kamis": ["Biologi", "Fisika", "Prakarya", "Bahasa Jawa", "Matematika Lanjut"],
+            "Jumat": ["Biologi", "PKN"]
+        };
+
+        let jadwal = JSON.parse(localStorage.getItem("jadwal")) || defaultJadwal;
+        let tugas = JSON.parse(localStorage.getItem("tugas")) || {};
+
+        let editModeOn = false;
+
+        function tampilkanJadwal() {
+            let container = document.getElementById("jadwalContainer");
+            container.innerHTML = "";
+
+            for (let hari in jadwal) {
+                let box = document.createElement("div");
+                box.className = "jadwal-box";
+
+                let title = `<h2>${hari}</h2>`;
+                let list = "<ul>";
+
+                jadwal[hari].forEach((pelajaran, idx) => {
+                    if (editModeOn) {
+                        list += `<li>${pelajaran}
+                                <button class='hapus-btn' onclick="hapusPelajaran('${hari}', ${idx})">Hapus</button>
+                             </li>`;
+                    } else {
+                        list += `<li>${pelajaran}</li>`;
+                    }
+                });
+
+                list += "</ul>";
+
+                let tugasList = "<p><b>Tugas:</b></p>";
+
+                if (!tugas[hari] || tugas[hari].length === 0) {
+                    tugasList += "<i>Tidak ada tugas</i>";
+                } else {
+                    tugas[hari].forEach((tugasnya, i) => {
+                        tugasList += `
+                         • ${tugasnya} 
+                         <button class='hapus-btn' onclick="hapusTugas('${hari}', ${i})">x</button><br>`;
+                    });
+                }
+
+                box.innerHTML = title + list + tugasList;
+                container.appendChild(box);
+            }
+        }
+
+        function showFormTambah() {
+            let hari = prompt("Masukkan hari (contoh: Senin):");
+            if (!hari) return;
+
+            let p = prompt("Masukkan pelajaran:");
+            if (!p) return;
+
+            if (!jadwal[hari]) jadwal[hari] = [];
+
+            jadwal[hari].push(p);
+            simpan();
+            tampilkanJadwal();
+        }
+
+        function showFormTugas() {
+            let hari = prompt("Hari apa untuk tugas?");
+            if (!hari) return;
+
+            let t = prompt("Isi tugas:");
+            if (!t) return;
+
+            if (!tugas[hari]) tugas[hari] = [];
+
+            tugas[hari].push(t);
+            simpan();
+            tampilkanJadwal();
+        }
+
+        function hapusPelajaran(hari, idx) {
+            jadwal[hari].splice(idx, 1);
+            simpan();
+            tampilkanJadwal();
+        }
+
+        function hapusTugas(hari, idx) {
+            tugas[hari].splice(idx, 1);
+            simpan();
+            tampilkanJadwal();
+        }
+
+        function editMode() {
+            editModeOn = !editModeOn;
+            alert(editModeOn ? "Mode Edit Aktif" : "Mode Edit Dimatikan");
+            tampilkanJadwal();
+        }
+
+        function toggleDark() {
+            document.body.classList.toggle("dark");
+        }
+
+        function ingatTugas() {
+            let total = 0;
+            for (let hari in tugas) total += tugas[hari].length;
+
+            alert("📌 Kamu punya " + total + " tugas yang belum dikerjakan!");
+        }
+
+        function simpan() {
+            localStorage.setItem("jadwal", JSON.stringify(jadwal));
+            localStorage.setItem("tugas", JSON.stringify(tugas));
+        }
+
+        tampilkanJadwal();
+    </script>
+
+</body>
+</html>
